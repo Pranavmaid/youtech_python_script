@@ -28,7 +28,7 @@ def setup_google_sheets_api(credentials_file):
 
 
 # Create or update spreadsheet with app name and add leads
-def update_spreadsheet(client, spreadsheet_name, app_name, leads):
+def update_spreadsheet(client, spreadsheet_name, sheet_name, leads):
   # Check if the spreadsheet already exists
   spreadsheet = None
   try:
@@ -36,13 +36,14 @@ def update_spreadsheet(client, spreadsheet_name, app_name, leads):
   except gspread.SpreadsheetNotFound:
     # Create a new spreadsheet
     spreadsheet = client.create(spreadsheet_name)
-  sheet = spreadsheet.worksheet("MBBS India OnlineSeminar May 2023")
+  sheet = spreadsheet.worksheet(sheet_name)
 
   # Add app name as the first row
   # app_row = [app_name]
   # sheet.insert_row(app_row, index=1)
 
   # Add leads to the sheet
+  allLeads = []
   for lead in leads:
     print("\n***********\n")
     # adding a timezone
@@ -82,8 +83,9 @@ def update_spreadsheet(client, spreadsheet_name, app_name, leads):
     # print("\n***********\n")
     print(listcheck)
     print("\n***********\n")
-    sheet.append_row(listcheck, value_input_option="USER_ENTERED")
-    time.sleep(2)
+    allLeads.append(listcheck)
+  sheet.append_rows([*allLeads], value_input_option="USER_ENTERED")
+  time.sleep(2)
 
 
 # Main script
@@ -100,82 +102,82 @@ def main():
 
   # Campaign ID
   # campaign_id = '23853497642620620'
-  campaign_id = '23854804044890471'
-
-  # App name
-  app_name = 'Leads Integration with Sheet'
-
-  # Spreadsheet name
-  spreadsheet_name = 'KGIF Institute Leads Feedback'
-  # spreadsheet = None
-  # try:
-  #   spreadsheet = client.open(spreadsheet_name)
-  # except gspread.SpreadsheetNotFound:
-  # Create a new spreadsheet
-  # spreadsheet = client.create(spreadsheet_name)
-  # sheet = spreadsheet.sheet1
-  # sheet.insert_row(["Title", "Ans.", "Name", "Phone No.", "Email"], index=1)
-  # sheet.update('A1:Z1', [["Title", "Ans.", "Name", "Phone No.", "Email"]])
-  # sheet.format(
-  #   "A1:Z1", {
-  #     "backgroundColor": {
-  #       "red": 0.0,
-  #       "green": 128,
-  #       "blue": 128
-  #     },
-  #     "horizontalAlignment": "CENTER",
-  #     "textFormat": {
-  #       "foregroundColor": {
-  #         "red": 1.0,
-  #         "green": 1.0,
-  #         "blue": 1.0
-  #       },
-  #       "bold": True
-  #     }
-  #   })
+  spreadsheet_name = "KGIF Institute Leads Feedback"
+  campaign_list = [
+    {
+      "campaign_id": '23855028975300471',
+      "spreadsheet_name": 'Kolhapur - Automated Sheet',
+      "leads": []
+    },
+    {
+      "campaign_id": '23854804044890471',
+      "spreadsheet_name": 'MBBS  INDIA - Automated Sheet',
+      "leads": []
+    },
+  ]
 
   while True:
-    # Retrieve ads from Facebook campaign
-    url = f'https://graph.facebook.com/v17.0/{campaign_id}/ads'
-    params = {
-      'access_token': fb_access_token,
-      'fields': 'id',
-      'limit': 10  # Adjust the limit based on your requirements
-    }
-
-    response = requests.get(url, params=params)
-    data = response.json()
-    # print(data)
-    ads = data['data']
-    # print(ads)
-
-    # Fetch leads from each ad
-    leads = []
-    for ad in ads:
-      ad_id = ad['id']
-      url = f'https://graph.facebook.com/v17.0/{ad_id}/leads'
+    for campaign in campaign_list:
+      # Retrieve ads from Facebook campaign
+      url = f'https://graph.facebook.com/v17.0/{campaign["campaign_id"]}/ads'
       params = {
         'access_token': fb_access_token,
-        'fields': 'field_data',
-        'limit': 10  # Adjust the limit based on your requirements
+        'fields': 'id'
+        # 'limit': 10  # Adjust the limit based on your requirements
       }
 
       response = requests.get(url, params=params)
       data = response.json()
-      # print(data)
-      leads.extend(data['data'])
+      print(data)
+      ads = data['data']
+      print(len(ads))
 
-      while 'paging' in data and 'next' in data['paging']:
-        response = requests.get(data['paging']['next'])
+      # Fetch leads from each ad
+      leads = []
+      for ad in ads:
+        ad_id = ad['id']
+        url = f'https://graph.facebook.com/v17.0/{ad_id}/leads'
+        params = {
+          'access_token': fb_access_token,
+          'fields': 'field_data'
+          # 'limit': 10  # Adjust the limit based on your requirements
+        }
+
+        response = requests.get(url, params=params)
         data = response.json()
+        # print(data)
         leads.extend(data['data'])
 
-    # Update or create spreadsheet and add leads
-    # time.sleep(5)
-    update_spreadsheet(client, spreadsheet_name, app_name, leads)
+        while 'paging' in data and 'next' in data['paging']:
+          response = requests.get(data['paging']['next'])
+          data = response.json()
+          leads.extend(data['data'])
 
-    # Wait for a minute before the next update
-    time.sleep(60)
+      # Update or create spreadsheet and add leads
+      # time.sleep(5)
+      # Convert dictionaries to tuples of key-value pairs
+      different_objects = []
+      # Iterate over objects in list2
+      for obj2 in leads:
+        if obj2 not in campaign["leads"]:
+          different_objects.append(obj2)
+
+      # print(json.dumps(different_objects))
+      if (len(different_objects) == 0):
+        print(len(different_objects))
+        print("same")
+      else:
+        print(len(different_objects))
+        campaign["leads"] = leads
+        print("not same")
+        update_spreadsheet(client, spreadsheet_name,
+                           campaign["spreadsheet_name"], different_objects)
+      #   campaign["leads"] = leads
+      #   print(len(leads))
+      # print(len(campaign["leads"]))
+
+      # # Wait for a minute before the next update
+      # time.sleep(60)
 
 
 if __name__ == '__main__':
