@@ -172,12 +172,12 @@ def main():
         print("not same")
         update_spreadsheet(client, spreadsheet_name,
                            campaign["spreadsheet_name"], different_objects)
+        time.sleep(60)
       #   campaign["leads"] = leads
       #   print(len(leads))
       # print(len(campaign["leads"]))
 
       # # Wait for a minute before the next update
-      # time.sleep(60)
 
 
 if __name__ == '__main__':
