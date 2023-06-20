@@ -8,6 +8,7 @@ from google.oauth2 import service_account
 import json
 from datetime import datetime, timezone
 import pytz
+import pandas as pd
 
 
 # Set up Facebook API connection
@@ -27,6 +28,19 @@ def setup_google_sheets_api(credentials_file):
   return client
 
 
+def flat(lis):
+  flatList = []
+  # Iterate with outer list
+  for element in lis:
+    if type(element) is list:
+      # Check if type is list than iterate through the sublist
+      for item in element:
+        flatList.append(str(item))
+    else:
+      flatList.append(str(element))
+  return flatList
+
+
 # Create or update spreadsheet with app name and add leads
 def update_spreadsheet(client, spreadsheet_name, sheet_name, leads):
   # Check if the spreadsheet already exists
@@ -44,46 +58,35 @@ def update_spreadsheet(client, spreadsheet_name, sheet_name, leads):
 
   # Add leads to the sheet
   allLeads = []
+  dataframe = pd.DataFrame(sheet.get_all_records())
+  allValues = flat(dataframe.values.tolist())
+  print(allValues)
   for lead in leads:
     print("\n***********\n")
+    # print(lead)
     # adding a timezone
     naive = datetime.now()
     timezone = pytz.timezone("Asia/Kolkata")
     aware1 = timezone.localize(naive)
 
-    # Calling the utcoffset() function
-    # over the above localized time
-    # print("Time ahead of UTC by:", aware1)
-    # print("Time ahead of UTC by:", aware1.utcoffset())
-    # print(leads)
-    # print("\n***********\n")
     listcheck = [str(aware1), "fb", "", "", "", ""]
     for l in lead['field_data']:
       if (l['name'] == 'name'):
         listcheck[3] = ','.join(l['values'])
       elif (l['name'] == 'phone_number'):
-        listcheck[4] = ','.join(l['values'])
-        # print("\n***********\n")
-        # print(listcheck)
-        # print("\n***********\n")
+        listcheck[4] = ','.join(l['values']).replace("+", "")
       elif (l['name'] == 'email'):
         listcheck[5] = ','.join(l['values'])
-        # print("\n***********\n")
-        # print(listcheck)
-        # print("\n***********\n")
       else:
-        # listcheck[0] = l['name']
         listcheck[2] = ','.join(l['values'])
-        # print("\n***********\n")
-        # print(listcheck)
-        # print("\n***********\n")
-        # listcheck.append()
-    # print("\n***********\n")
-    # print(lead)
-    # print("\n***********\n")
+
     print(listcheck)
     print("\n***********\n")
-    allLeads.append(listcheck)
+    # print(listcheck[4] not in allValues)
+    # print(listcheck[4])
+    if listcheck[4] not in allValues:
+      print(listcheck[4])
+      allLeads.append(listcheck)
   sheet.append_rows([*allLeads], value_input_option="USER_ENTERED")
   time.sleep(2)
 
