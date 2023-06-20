@@ -87,6 +87,7 @@ def update_spreadsheet(client, spreadsheet_name, sheet_name, leads):
     if listcheck[4] not in allValues:
       print(listcheck[4])
       allLeads.append(listcheck)
+      time.sleep(200/1000)
   sheet.append_rows([*allLeads], value_input_option="USER_ENTERED")
   time.sleep(2)
 
