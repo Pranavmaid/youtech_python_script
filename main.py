@@ -175,7 +175,7 @@ def main():
         print("not same")
         update_spreadsheet(client, spreadsheet_name,
                            campaign["spreadsheet_name"], different_objects)
-        time.sleep(60)
+        time.sleep(1200)
       #   campaign["leads"] = leads
       #   print(len(leads))
       # print(len(campaign["leads"]))
