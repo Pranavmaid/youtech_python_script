@@ -101,7 +101,7 @@ def main():
   graph = setup_facebook_api(fb_app_id, fb_app_secret, fb_access_token)
 
   # Google Sheets credentials
-  google_credentials_file = 'youtech_goole_credantials.json'
+  google_credentials_file = '/home/pranavmaid1/youtech_python_script/youtech_goole_credantials.json'
   client = setup_google_sheets_api(google_credentials_file)
 
   # Campaign ID
